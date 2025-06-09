@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sheet to Audio Converter</title>
+    <style>
+        #progress-container {
+            width: 100%;
+            background-color: #ddd;
+            height: 20px;
+            display: none;
+            margin-top: 20px;
+        }
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            text-align: center;
+            color: white;
+            line-height: 20px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Convert Sheet Music to Audio</h1>
+    <form method="POST" enctype="multipart/form-data" onsubmit="startProgress()">
+        <label for="file">Upload sheet music (PDF, PNG, JPG, etc):</label><br>
+        <input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.heic" required><br><br>
+
+        <label for="instrument">Choose an instrument:</label><br>
+        <select name="instrument" id="instrument" required>
+            <option value="Piano">🎹 Piano</option>
+            <option value="Violin">🎻 Violin</option>
+            <option value="Flute">🎶 Flute</option>
+            <option value="AltoSaxophone">🎷 Alto Saxophone</option>
+        </select><br><br>
+
+        <button type="submit">Generate Audio</button>
+    </form>
+
+    <div id="progress-container">
+        <div id="progress-bar">0%</div>
+    </div>
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    {% if audio_file %}
+        <h2>Preview:</h2>
+        <audio controls>
+            <source src="{{ url_for('static', filename='audio/' + audio_file.split('/')[-1]) }}" type="audio/wav">
+            Your browser does not support the audio element.
+        </audio>
+        <p><a href="{{ url_for('download', filename=audio_file.split('/')[-1]) }}">Download Audio</a></p>
+    {% endif %}
+
+    <script>
+        function startProgress() {
+            document.getElementById("progress-container").style.display = "block";
+            let progressBar = document.getElementById("progress-bar");
+
+            const interval = setInterval(async () => {
+                const res = await fetch("/progress");
+                const data = await res.json();
+                progressBar.style.width = data.progress + "%";
+                progressBar.textContent = data.progress + "%";
+
+                if (data.progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 500);
+        }
+    </script>
+</body>
+</html>
