@@ -10,7 +10,7 @@ app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 OUTPUT_FOLDER = 'output'
 AUDIO_FOLDER = 'static/audio'
-SOUNDFONT_PATH = '/Users/brandonhebrandonhe/Downloads/FluidR3_GM/FluidR3_GM.sf2'
+SOUNDFONT_PATH = '/opt/homebrew/Cellar/fluid-synth/2.4.6/share/fluid-synth/sf2/VintageDreamsWaves-v2.sf2'
 
 # Set Tesseract data path for Audiveris
 os.environ["TESSDATA_PREFIX"] = os.path.expanduser("~/tessdata")
@@ -114,15 +114,18 @@ def convert_scores_to_audio(scores, final_output_path, instrument_name):
         mf.write()
         mf.close()
 
-        subprocess.run([
+        result = subprocess.run([
             'fluidsynth',
             '-ni',
+            '-F', audio_path,
+            '-r', '44100',
             SOUNDFONT_PATH,
-            midi_path,
-            '-F',
-            audio_path,
-            '-r', '44100'
-        ])
+            midi_path
+        ], capture_output=True, text=True)
+
+        print("FLUIDSYNTH STDOUT:\n", result.stdout)
+        print("FLUIDSYNTH STDERR:\n", result.stderr)
+
         temp_audio_files.append(audio_path)
 
     if len(temp_audio_files) == 1:
